@@ -41,11 +41,6 @@ void save_params(std::vector<double> const &params, std::vector<double> const &d
   dataFile.close();
 }
 
-void restart(uWS::WebSocket<uWS::SERVER> ws) {
-  std::string reset_msg = "42[\"reset\",{}]";
-  ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
-}
-
 class Twiddle {
 public:
 
@@ -151,7 +146,7 @@ int main()
 
   const bool twiddle_enable = true;
   const double cycle_time_max = 180.0;
-  const double cycle_dist_max = 1.50; // one full lap 0.71, on sharp turn 0.42
+  const double cycle_dist_max = 2.0; // one full lap 0.71, on sharp turn 0.42
 
 
 //  std::vector<double> p = {0.2, 0.003, 0.01};
@@ -177,9 +172,16 @@ int main()
 
   //std::vector<double> p = {0.0466836, 0.00167769, 0.0744459}; //thr = 0.8, 2965.36 | 0.0466836 0.00167769 0.0744459 | 0.00799102 0.000132636 0.00443945 | 23.33 0.520237   ++++
 
-  std::vector<double> p = {0.0376836, 0.00137769, 0.0694459}; // thr 0.8, 3264.17 | 0.0386926 0.00167769 0.0744459 | 0.00799102 0.000132636 0.00443945 | 51.8368 1.00072  ++++
+  //std::vector<double> p = {0.0386926, 0.00167769, 0.0744459}; // thr 0.8, 3264.17 | 0.0386926 0.00167769 0.0744459 | 0.00799102 0.000132636 0.00443945 | 51.8368 1.00072  ++++
 
-  std::vector<double> dp = {0.00799102, 0.000132636, 0.00443945};
+  //std::vector<double> p = {0.0618177, 0.00154422, 0.0652491}; // thr 0.8 1941.66 | 0.0618177 0.00154422 0.0652491 | 6.76738e-05 8.35482e-07 3.75965e-05 | 51.4764 1.00031 +++++
+
+  // std::vector<double> p = {0.166818, 0.00154422, 0.170249}; // thr 0.8 583.667 | 0.166818 0.00154422 0.170249 | 0.0605 0.0009 0.055 | 16.6913 0.200166
+
+  std::vector<double> p = {0.0377986, 0.00119333, 0.0744459}; // thr 0.8, 10539.1 | 0.216818 0.00254422 0.237055 | 0.0236757 0.000526127 0.0263063 | 147.645 1.89792   +++++
+
+
+  std::vector<double> dp = {0.003, 0.0001, 0.007};
 
   pid.Init(p[0], p[1], p[2]);
   twiddle.Init(p, dp);
@@ -256,10 +258,16 @@ int main()
 //
 //          }
 
+          bool crash = false;
+          if (cycle_dist > 0.001) {
+            if (pid.TotalError()/cycle_dist > 20000.0) {
+              crash = true;
+            }
+          }
 
 
           // Initialize first time PID params
-          if (!init_flag || dt > 1.0) {
+          if (!init_flag || dt > 1.0 || crash) {
             std::cout << "======= INIT ==================" << std::endl;
 //            if (init_flag) {
 //              std::cout << "=== ERROR: " << pid.total_err << std::endl;
@@ -271,16 +279,17 @@ int main()
               fresh_param = true;
             } else {
               const double cycle_dt = std::chrono::duration<double>(clk - cycle_clk).count();
-              save_params(twiddle.getParams(), twiddle.getDp(), pid.TotalError()/cycle_dist, cycle_dt, cycle_dist);
-              //p = twiddle.next(pid.TotalError()/cycle_dist);
-              if (fresh_param) {
-                fresh_param = !fresh_param;
-              } else {
-                p = twiddle.next(1e+07);
-                fresh_param = true;
-              }
-            }
+              save_params(twiddle.getParams(), twiddle.getDp(), pid.TotalError()/(cycle_dist*cycle_dist), cycle_dt, cycle_dist);
 
+              p = twiddle.next(pid.TotalError()/(cycle_dist*cycle_dist));
+
+//              if (fresh_param) {
+//                fresh_param = !fresh_param;
+//              } else {
+//                p = twiddle.next(pid.TotalError()/(cycle_dist*cycle_dist));
+//                fresh_param = true;
+//              }
+            }
 
             pid.Init(p[0], p[1], p[2]);
 
@@ -288,6 +297,12 @@ int main()
 
             cycle_clk = std::chrono::high_resolution_clock::now();
             cycle_dist = 0;
+
+            if (crash) {
+              std::string reset_msg = "42[\"reset\",{}]";
+              ws->send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
+              return;
+            }
 
           }
 
@@ -302,8 +317,8 @@ int main()
           // Finish previous cycle and start new one
           if (twiddle_enable && cycle_dist > cycle_dist_max) { //cycle_dt > cycle_time_max
             double cycle_error = pid.TotalError();
-            save_params(twiddle.getParams(), twiddle.getDp(), cycle_error/cycle_dist, cycle_dt, cycle_dist);
-            p = twiddle.next(cycle_error/cycle_dist);
+            save_params(twiddle.getParams(), twiddle.getDp(), cycle_error/(cycle_dist*cycle_dist), cycle_dt, cycle_dist);
+            p = twiddle.next(cycle_error/(cycle_dist*cycle_dist));
             pid.Init(p);
             cycle_clk = std::chrono::high_resolution_clock::now();
             cycle_dist = 0.0;
