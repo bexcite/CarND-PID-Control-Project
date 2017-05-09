@@ -1,6 +1,9 @@
 #ifndef PID_H
 #define PID_H
 
+#include <chrono>
+#include <vector>
+
 class PID {
 public:
   /*
@@ -17,6 +20,11 @@ public:
   double Ki;
   double Kd;
 
+  bool is_updated;
+  std::chrono::high_resolution_clock::time_point prev_clk;
+
+  double total_err;
+
   /*
   * Constructor
   */
@@ -31,6 +39,7 @@ public:
   * Initialize PID.
   */
   void Init(double Kp, double Ki, double Kd);
+  void Init(std::vector<double> &p);
 
   /*
   * Update the PID error variables given cross track error.
@@ -41,6 +50,8 @@ public:
   * Calculate the total PID error.
   */
   double TotalError();
+
+  std::string getParamsStr();
 };
 
 #endif /* PID_H */
