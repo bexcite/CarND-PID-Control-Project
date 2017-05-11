@@ -54,8 +54,8 @@ void PID::UpdateError(double cte) {
 
   this->total_err += cte * cte;
 
-  std::cout << "UpdateError: dt = " << dt << ", p_e = " << this->p_error << ", i_e = " << this->i_error << ", d_e = " << this->d_error << std::endl;
-  std::cout << "UpdateError: P = " << this->p_error * this->Kp
+  std::cout << "UE: dt = " << dt << ", p_e = " << this->p_error << ", i_e = " << this->i_error << ", d_e = " << this->d_error << std::endl;
+  std::cout << "UE: P = " << this->p_error * this->Kp
             << ", I = " << this->i_error * this->Ki
             << ", D = " << this->d_error * this->Kd
             << std::endl;
@@ -69,7 +69,7 @@ double PID::TotalError() {
 
 std::string PID::getParamsStr() {
   ostringstream oss;
-  oss << "PID params: Kp = " << Kp << ", Ki = " << Ki << ", Kd = " << Kd << std::endl;
+  oss << "PID params: Kp = " << Kp << ", Ki = " << Ki << ", Kd = " << Kd;
   return oss.str();
 }
 
