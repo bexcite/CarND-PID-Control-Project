@@ -54,4 +54,37 @@ public:
   std::string getParamsStr();
 };
 
+class Twiddle {
+public:
+
+  Twiddle();
+
+  void Init(std::vector<double> &params);
+
+  void Init(std::vector<double> const &params, std::vector<double> const &dp);
+
+  double next(double error, std::vector<double> &p);
+
+  double dpSum();
+
+  std::vector<double> getParams();
+
+  std::vector<double> getBestParams();
+
+  std::vector<double> getDp();
+
+  double getLastError();
+
+private:
+  const static int n_ = 3;
+  int curr_param;
+  bool twiddling_started;
+  bool is_up;
+  std::vector<double> params_;
+  std::vector<double> best_params_;
+  std::vector<double> dp_;
+  double lastError_;
+};
+
+
 #endif /* PID_H */

@@ -7,9 +7,9 @@
 
 using namespace std;
 
-/*
-* TODO: Complete the PID class.
-*/
+/* =================================================== */
+/* === PID implementation ============================ */
+/* =================================================== */
 
 PID::PID() {}
 
@@ -71,5 +71,105 @@ std::string PID::getParamsStr() {
   ostringstream oss;
   oss << "PID params: Kp = " << Kp << ", Ki = " << Ki << ", Kd = " << Kd;
   return oss.str();
+}
+
+
+/* =================================================== */
+/* === Twiddle implementation ======================== */
+/* =================================================== */
+
+
+Twiddle::Twiddle() {
+  params_.resize(3);
+  dp_.resize(3);
+}
+
+void Twiddle::Init(std::vector<double> &params) {
+//    params_ = std::vector<double>();
+//    params_.push_back(params[0]);
+  //params_.assign(params, params+3);
+  params_ = params;
+  best_params_ = params;
+  for (int i = 0; i < n_; ++i) {
+    dp_[i] = params[i]/3.0;
+  }
+  lastError_ = 1000000.0;
+  twiddling_started = false;
+}
+
+void Twiddle::Init(std::vector<double> const &params, std::vector<double> const &dp) {
+  params_ = params;
+  best_params_ = params;
+  dp_ = dp;
+  lastError_ = 1000000.0;
+  twiddling_started = false;
+
+}
+
+
+double Twiddle::next(double error, std::vector<double> &p) {
+
+  if (!twiddling_started) {
+    twiddling_started = true;
+    lastError_ = error;
+    curr_param = 0;
+    params_[curr_param] += dp_[curr_param];
+    is_up = true;
+    p = params_;
+    return dpSum();
+  }
+
+  if (error < lastError_) {
+    lastError_ = error;
+    best_params_ = params_;
+    dp_[curr_param] *= 1.1;
+
+    // advance to next param
+    curr_param = (curr_param + 2) % 3;
+    params_[curr_param] += dp_[curr_param];
+    is_up = true;
+    p = params_;
+    return dpSum();
+  }
+
+  if (is_up) {
+    // try lower
+    params_[curr_param] -= 2 * dp_[curr_param];
+    is_up = !is_up;
+    p = params_;
+    return dpSum();
+  }
+
+  // return param back and decrease step
+  params_[curr_param] += dp_[curr_param];
+  dp_[curr_param] *= 0.9;
+
+  // advance to a next param
+  curr_param = (curr_param + 2) % 3;
+  params_[curr_param] += dp_[curr_param];
+  is_up = true;
+  p = params_;
+  return dpSum();
+
+}
+
+double Twiddle::dpSum() {
+  return dp_[0] + dp_[1] + dp_[2];
+}
+
+std::vector<double> Twiddle::getParams() {
+  return params_;
+}
+
+std::vector<double> Twiddle::getBestParams() {
+  return best_params_;
+}
+
+std::vector<double> Twiddle::getDp() {
+  return dp_;
+}
+
+double Twiddle::getLastError() {
+  return lastError_;
 }
 

@@ -42,167 +42,39 @@ void save_params(std::vector<double> const &params, std::vector<double> const &d
   dataFile.close();
 }
 
-class Twiddle {
-public:
-
-  Twiddle() {
-    params_.resize(3);
-    dp_.resize(3);
-  }
-
-  void Init(std::vector<double> &params) {
-//    params_ = std::vector<double>();
-//    params_.push_back(params[0]);
-    //params_.assign(params, params+3);
-    params_ = params;
-    best_params_ = params;
-    for (int i = 0; i < n_; ++i) {
-      dp_[i] = params[i]/3.0;
-    }
-    lastError_ = 1000000.0;
-    twiddling_started = false;
-  }
-
-  void Init(std::vector<double> const &params, std::vector<double> const &dp) {
-    params_ = params;
-    best_params_ = params;
-    dp_ = dp;
-    lastError_ = 1000000.0;
-    twiddling_started = false;
-
-  }
-
-
-  double next(double error, std::vector<double> &p) {
-
-    if (!twiddling_started) {
-      twiddling_started = true;
-      lastError_ = error;
-      curr_param = 0;
-      params_[curr_param] += dp_[curr_param];
-      is_up = true;
-      p = params_;
-      return dpSum();
-    }
-
-    if (error < lastError_) {
-      lastError_ = error;
-      best_params_ = params_;
-      dp_[curr_param] *= 1.1;
-
-      // advance to next param
-      curr_param = (curr_param + 2) % 3;
-      params_[curr_param] += dp_[curr_param];
-      is_up = true;
-      p = params_;
-      return dpSum();
-    }
-
-    if (is_up) {
-      // try lower
-      params_[curr_param] -= 2 * dp_[curr_param];
-      is_up = !is_up;
-      p = params_;
-      return dpSum();
-    }
-
-    // return param back and decrease step
-    params_[curr_param] += dp_[curr_param];
-    dp_[curr_param] *= 0.9;
-
-    // advance to next param
-    curr_param = (curr_param + 2) % 3;
-    params_[curr_param] += dp_[curr_param];
-    is_up = true;
-    p = params_;
-    return dpSum();
-
-  }
-
-  double dpSum() {
-    return dp_[0] + dp_[1] + dp_[2];
-  }
-
-  std::vector<double> getParams() {
-    return params_;
-  }
-
-  std::vector<double> getBestParams() {
-    return best_params_;
-  }
-
-  std::vector<double> getDp() {
-    return dp_;
-  }
-
-  double getLastError() {
-    return lastError_;
-  }
-
-private:
-  const static int n_ = 3;
-  int curr_param;
-  bool twiddling_started;
-  bool is_up;
-  std::vector<double> params_;
-  std::vector<double> best_params_;
-  std::vector<double> dp_;
-  double lastError_;
-};
-
 
 int main()
 {
   uWS::Hub h;
 
-
-
   PID pid;
-  // TODO: Initialize the pid variable.
-
   Twiddle twiddle;
 
-  const bool twiddle_enable = true;
 
   const double cycle_time_max = 180.0;
   double cycle_dist_max = 2.0; // one full lap 0.71, on sharp turn 0.42
 
 
-//  std::vector<double> p = {0.2, 0.003, 0.01};
-//  std::vector<double> p = {0.1, 0.0001, 0.02};
-//  std::vector<double> p = {0.08, 0.01, 0.05}; // good for 0.5
-
+  /* ===== Different Debug Params ==== */
+  /* == for all experiments see params.txt file ==== */
+  //std::vector<double> p = {0.2, 0.003, 0.01};
+  //std::vector<double> p = {0.1, 0.0001, 0.02};
+  //std::vector<double> p = {0.08, 0.01, 0.05}; // good for 0.5
   //std::vector<double> p = {0.08, 0.01, 0.05}; // started - good
-
-//  std::vector<double> p = {0.106667, 0.0133333, 0.0666667}; // found first iter! throttle = 0.5
-
-//  std::vector<double> p = {0.106667, 0.0133333, 0.0666667}; // found second iter! 360.953 0.151667 0.0133333 0.0666667 0.045 0.0054 0.0297 40.0117, thr = 0.5
-
-
-  // std::vector<double> p = {0.066667, 0.0201409, 0.0506287}; // found third iter! 1340.21 0.066667 0.0201409 0.0506287 0.0288684 0.0032076 0.0176418 45.0127 thr = 0.7
-
-  // std::vector<double> p = {0.110767, 0.0348409, 0.0968287}; // found fourth iter! 570.396 0.110767 0.0348409 0.0968287 0.02541 0.00847 0.0242 45.0033 thr = 0.5
-
+  //std::vector<double> p = {0.106667, 0.0133333, 0.0666667}; // found first iter! throttle = 0.5
+  //std::vector<double> p = {0.106667, 0.0133333, 0.0666667}; // found second iter! 360.953 0.151667 0.0133333 0.0666667 0.045 0.0054 0.0297 40.0117, thr = 0.5
+  //std::vector<double> p = {0.066667, 0.0201409, 0.0506287}; // found third iter! 1340.21 0.066667 0.0201409 0.0506287 0.0288684 0.0032076 0.0176418 45.0127 thr = 0.7
+  //std::vector<double> p = {0.110767, 0.0348409, 0.0968287}; // found fourth iter! 570.396 0.110767 0.0348409 0.0968287 0.02541 0.00847 0.0242 45.0033 thr = 0.5
   //std::vector<double> p = {0.164128, 0.0526279, 0.0726287}; // found fifth iter! 601.452 | 0.164128 0.0526279 0.0726287 | 0.0307461 0.009317 0.02662 | 46.8515 0.70037 thr=0.5
-
-  // std::vector<double> p = {0.066667, 0.00151409, 0.0806287}; // found third iter! 1340.21 | 0.066667 0.0201409 0.0506287 | 0.0288684 0.0032076 0.0176418 45.0127 thr = 0.7
-
+  //std::vector<double> p = {0.066667, 0.00151409, 0.0806287}; // found third iter! 1340.21 | 0.066667 0.0201409 0.0506287 | 0.0288684 0.0032076 0.0176418 45.0127 thr = 0.7
   //std::vector<double> p = {0.0377986, 0.00119333, 0.0744459}; // found! thr = 0.8, 2056.95 | 0.0377986 0.00119333 0.0744459 | 0.016876 0.000187512 0.011459 | 24.4711 0.420531
-
   //std::vector<double> p = {0.0466836, 0.00167769, 0.0744459}; //thr = 0.8, 2965.36 | 0.0466836 0.00167769 0.0744459 | 0.00799102 0.000132636 0.00443945 | 23.33 0.520237   ++++
-
   //std::vector<double> p = {0.0386926, 0.00167769, 0.0744459}; // thr 0.8, 3264.17 | 0.0386926 0.00167769 0.0744459 | 0.00799102 0.000132636 0.00443945 | 51.8368 1.00072  ++++
-
   //std::vector<double> p = {0.0618177, 0.00154422, 0.0652491}; // thr 0.8 1941.66 | 0.0618177 0.00154422 0.0652491 | 6.76738e-05 8.35482e-07 3.75965e-05 | 51.4764 1.00031 +++++
-
-  // std::vector<double> p = {0.166818, 0.00154422, 0.170249}; // thr 0.8 583.667 | 0.166818 0.00154422 0.170249 | 0.0605 0.0009 0.055 | 16.6913 0.200166
-
+  //std::vector<double> p = {0.166818, 0.00154422, 0.170249}; // thr 0.8 583.667 | 0.166818 0.00154422 0.170249 | 0.0605 0.0009 0.055 | 16.6913 0.200166
   //std::vector<double> p = {0.0377986, 0.00119333, 0.0744459}; // thr 0.8, 10539.1 | 0.216818 0.00254422 0.237055 | 0.0236757 0.000526127 0.0263063 | 147.645 1.89792   +++++
-
   //std::vector<double> dp = {0.01, 0.0004, 0.025}; // thr 0.65 1367.83 | 0.0435932 0.00116149 0.0842111 | 0.00140811 4.37995e-05 0.00292145 | 0.65 | 101.046 1.95025  +++
-
   // thr 0.7 710.522 | 0.0496775 0.00115605 0.0634661 | 0.00305866 0.000114554 0.00787381 | 0.7 | 166.36 3.50002  ++++
-
   // thr 0.65 689.114 | 0.0501825 0.00115591 0.0624025 | 0.000404957 1.37878e-05 0.000852925 | 0.65 | 173.715 3.25084
 
   // thr 0.7
@@ -211,19 +83,28 @@ int main()
   // + 524.784 | 0.059356 0.00116114 0.0643191 | 0.000589883 1.24104e-05 0.0013576 | 0.7 | 211.418 4.2003 ++++
   // 523.671 | 0.059356 0.001153 0.0643191 | 0.000387023 8.14246e-06 0.000979796 | 0.7 | 212.839 4.2001  +++
 
+  // fun params for 0.5 & 0.7 = {0.914603, 0.585019, 1.60963}
 
-  std::vector<double> p = {0.059356, 0.00116114, 0.0643191};
-  std::vector<double> dp = {0.059356 * 0.1, 0.00116114 * 0.1, 0.0643191 * 0.1};
+  // Fun params :)
+  //std::vector<double> p = {0.914603, 0.585019, 1.60963};
 
-  double throttle = 0.99;
+  // These params good for throttle 0.7 (decrease to 0.5 for a SAFE driving)
+  std::vector<double> p = {0.0496775, 0.00115605, 0.0634661}; // OR {0.0618177, 0.00154422, 0.0652491};
+
+
+
+  double throttle = 0.7;
+
+  // Twiddling params
+  std::vector<double> dp = {p[0] * 0.1, p[1] * 0.1, p[2] * 0.1};
   double dp_thresh = 0.0005;
   double throttle_dist_ratio = 6.0;
+  const bool twiddle_enable = true;
 
   pid.Init(p[0], p[1], p[2]);
   twiddle.Init(p, dp);
 
   bool is_initialized = false;
-
 
   auto prev_clk = std::chrono::high_resolution_clock::now();
   auto cycle_clk = std::chrono::high_resolution_clock::now();
@@ -231,7 +112,6 @@ int main()
   double prev_speed = 0.0;
   double cycle_dist = 0.0;
 
-  bool fresh_param = true;
 
   /*
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> *ws, char *message, size_t length, uWS::OpCode opCode) {
@@ -241,7 +121,7 @@ int main()
 
 
 
-  h.onMessage([&pid, &p, &dp, &dp_thresh, &throttle_dist_ratio, &is_initialized, &prev_clk, &cycle_clk, &twiddle, &cycle_time_max, &cycle_dist, &cycle_dist_max, &prev_speed, &fresh_param, &throttle](uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid, &p, &dp, &dp_thresh, &throttle_dist_ratio, &is_initialized, &prev_clk, &cycle_clk, &twiddle, &cycle_time_max, &cycle_dist, &cycle_dist_max, &prev_speed, &throttle](uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -287,12 +167,14 @@ int main()
               std::cout << "======= INIT ==================" << std::endl;
               p = twiddle.getParams();
               is_initialized = true;
-//              fresh_param = true;
             } else if (twiddle_enable) {
+              // Advance to the next params
               const double cycle_dt = std::chrono::duration<double>(clk - cycle_clk).count();
               save_params(twiddle.getParams(), twiddle.getDp(), pid.TotalError()/(cycle_dist*cycle_dist), cycle_dt, cycle_dist, throttle);
 
               if (twiddle.next(pid.TotalError()/(cycle_dist*cycle_dist), p) < dp_thresh) {
+                // Delta is small so use the best params from current twiddle,
+                // increase throttle and init twiddle again
                 p = twiddle.getBestParams();
                 dp[0] = p[0] * 0.1;
                 dp[1] = p[1] * 0.1;
@@ -301,23 +183,18 @@ int main()
                 throttle += 0.05;
               }
 
-//              if (fresh_param) {
-//                fresh_param = !fresh_param;
-//              } else {
-//                p = twiddle.next(pid.TotalError()/(cycle_dist*cycle_dist));
-//                fresh_param = true;
-//              }
             }
 
             pid.Init(p[0], p[1], p[2]);
 
             std::cout << "INIT PID: " << pid.getParamsStr() << std::endl;
 
+            // Reset cycle (used for training Twiddle)
             cycle_clk = clk;
             cycle_dist = 0;
 
             if (crash) {
-              // Restart
+              // Restart simulator
               std::string reset_msg = "42[\"reset\",{}]";
               ws->send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
               return;
@@ -354,7 +231,8 @@ int main()
             pid.Init(p);
             cycle_clk = clk;
             cycle_dist = 0.0;
-//            fresh_param = true;
+
+
             std::cout << "<<<<< Finish Cycle " << std::endl;
             std::cout << "CYCLE_ERROR = " << cycle_error << std::endl;
             std::cout << "New params: " << pid.getParamsStr() << std::endl;
@@ -380,9 +258,6 @@ int main()
 
           steer_value = - pid.Kp * pid.p_error - pid.Ki * pid.i_error - pid.Kd * pid.d_error;
 
-
-          // sigmoid - to make value from -1 to 1
-//          steer_value = 1 / (1 + exp(-steer_value));
 
           if (steer_value < -1.0) {
             steer_value = -1.0;
