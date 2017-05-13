@@ -3,3 +3,4 @@ build
 tags
 .editorconfig
 cmake-build-debug
+uWebSockets-0.13.0

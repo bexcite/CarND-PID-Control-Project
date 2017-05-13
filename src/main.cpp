@@ -119,7 +119,7 @@ int main()
 
 
 
-  h.onMessage([&pid, &p, &dp, &dp_thresh, &throttle_dist_ratio, &is_initialized, &prev_clk, &cycle_clk, &twiddle, &cycle_time_max, &cycle_dist, &cycle_dist_max, &prev_speed, &throttle](uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid, &p, &dp, &dp_thresh, &throttle_dist_ratio, &is_initialized, &prev_clk, &cycle_clk, &twiddle, &cycle_time_max, &cycle_dist, &cycle_dist_max, &prev_speed, &throttle](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -194,7 +194,7 @@ int main()
             if (crash) {
               // Restart simulator
               std::string reset_msg = "42[\"reset\",{}]";
-              ws->send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
+              ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
               return;
             }
 
@@ -272,12 +272,12 @@ int main()
           msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
 //          std::cout << msg << std::endl;
-          ws->send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+          ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
         // Manual driving
         std::string msg = "42[\"manual\",{}]";
-        ws->send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+        ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
     }
   });
