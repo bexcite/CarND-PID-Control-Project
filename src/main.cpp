@@ -86,12 +86,10 @@ int main()
   // fun params for 0.5 & 0.7 = {0.914603, 0.585019, 1.60963}
 
   // Fun params :)
-  //std::vector<double> p = {0.914603, 0.585019, 1.60963};
+  // std::vector<double> p = {0.914603, 0.585019, 1.60963};
 
   // These params good for throttle 0.7 (decrease to 0.5 for a SAFE driving)
   std::vector<double> p = {0.0496775, 0.00115605, 0.0634661}; // OR {0.0618177, 0.00154422, 0.0652491};
-
-
 
   double throttle = 0.7;
 

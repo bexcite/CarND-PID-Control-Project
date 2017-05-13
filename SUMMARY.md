@@ -17,7 +17,7 @@ Twiddle algorithm helped tune the manually selected parameters to an optimal val
   
 So I've decided to run twiddle starting from a lower throttle (0.3), arbitrary selected parameters (1, 1, 1) and gradually increase throttle when sum of delta params is becoming lower then 0.0005. Though it didn't work well. See video below.
   
-<< oscillator video >>
+[![Driving Result with skidding](https://img.youtube.com/vi/qWLOsLYCOKs/0.jpg)](https://youtu.be/qWLOsLYCOKs)
   
 Twiddle worked as intended and drives the error down, which was defined as TotalError/(Dist * Dist). Factor over distance squared was used because car could crash at any time. Though the total error representations is not capturing the level of oscillations directly.
 
@@ -27,6 +27,6 @@ There was about 3000 tries in simulator (automatic tries) where I've been able t
  
 Result is reasonably good on throttle value 0.7 and by decreasing it to 0.5 we have a safe driving experience. Here is the result for 0.7 throttle.
 
-<< video of 0.7 throttle >>
+[![Driving Result, final, throttle 0.7](https://img.youtube.com/vi/ktxTm1NiNiM/0.jpg)](https://youtu.be/ktxTm1NiNiM)
 
 
