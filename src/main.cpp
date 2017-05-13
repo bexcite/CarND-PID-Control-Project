@@ -99,7 +99,7 @@ int main()
   std::vector<double> dp = {p[0] * 0.1, p[1] * 0.1, p[2] * 0.1};
   double dp_thresh = 0.0005;
   double throttle_dist_ratio = 6.0;
-  const bool twiddle_enable = true;
+  const bool twiddle_enable = false;
 
   pid.Init(p[0], p[1], p[2]);
   twiddle.Init(p, dp);
